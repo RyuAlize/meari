@@ -10,11 +10,16 @@ use image::{ImageEncoder, ColorType};
 use std::fs::OpenOptions;
 use std::thread;
 use std::io::Result;
+use tokio::task;
 
+use screen::ScreenCap;
+#[tokio::main]
+async fn main() -> Result<()>{
+/*     let (mut sc, mut rx) = ScreenCap::new()?;
 
-use screen::Screen;
-fn main() -> Result<()>{
-    let (mut sc, mut rx) = Screen::new()?;
+    task::spawn( async move {
+        sc.frame().await;
+    }); */
     
     Ok(())
 

@@ -2,53 +2,56 @@ use std::fs::OpenOptions;
 use std::io::Result;
 use std::thread;
 use std::io::ErrorKind::WouldBlock;
+use std::future::Future;
 
 use scrap::{Capturer, Display, Frame};
 use image::codecs::png;
 use image::{ImageEncoder, ColorType};
 use flume::{Sender, Receiver};
 use tokio::task;
-
+use tokio::sync::{broadcast, mpsc, Semaphore};
 use crate::config::FPS;
-pub struct Screen {
+pub struct ScreenCap {
     capturer: Capturer,
+    signal_rx: Receiver<Semaphore>,
     pixel_frame_tx: Sender<Vec<u8>>
 }
 
-impl Screen {
-    pub fn new() -> Result<(Self, Receiver<Vec<u8>>)> {
+impl Future for ScreenCap {
+    type Output = ();
+    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        todo!()
+    }
+}
+impl ScreenCap {
+    pub fn new(signal_rx: Receiver<Semaphore>) -> Result<(Self, Receiver<Vec<u8>>)> {
         let display = Display::primary()?;
         let mut capturer = Capturer::new(display)?;
         let (tx, rx) = flume::unbounded();
-        Ok((Self { capturer, pixel_frame_tx: tx }, rx))
+        Ok((Self { capturer, signal_rx, pixel_frame_tx: tx }, rx))
     }
 
 
-    pub async fn frame(&mut self) {
-        let (w, h) = (self.capturer.width(), self.capturer.height());
+    pub async fn capture(&mut self) -> Result<Vec<u8>> {
+        let (width, height) = (self.capturer.width(), self.capturer.height());
         let one_second = std::time::Duration::new(1, 0);
         let one_frame = one_second / FPS;
         loop{
             match self.capturer.frame() {
                 Ok(buffer) => {
-                    match self.pixel_frame_tx.send(frame_to_bytes(buffer, w, h)) {
-                        Ok(_) =>(),
-                        Err(_) => break,
-                    }
+                    return Ok(frame_to_bytes(buffer, width, height));
                 },
                 Err(error) => {
                     if error.kind() == WouldBlock {
                         thread::sleep(one_frame);
                         continue;
                     } else {
-                        break;
+                        return Err(error);
                     }
                 }
-            };
-            
+            };        
         } 
     } 
-
 
 }
 
