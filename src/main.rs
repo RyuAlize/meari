@@ -1,5 +1,6 @@
 mod screen;
-//mod server;
+mod server;
+mod connection;
 mod config;
 mod util;
 
