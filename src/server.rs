@@ -30,11 +30,11 @@ impl Listenable for SocketAddr {
 }
 
 
-pub async fn run(listener: impl Listenable, shutdown: impl Future) -> io::Result<()> {
+pub async fn run(listener: SocketAddr, shutdown: impl Future) -> io::Result<()> {
     let (mut shutdown_complete_tx, mut shutdown_complete_rx) = flume::bounded::<()>(1);
     let server = Server {
-        tcp_listener: listener.bind()?,
-        remote_desk_service: RemoteDesktopService::new(shutdown_complete_rx),
+        tcp_listener: listener.bind().await?,
+        remote_desk_service: RemoteDesktopService::new(shutdown_complete_rx)?,
         shutdown_complete_tx,
     };
 
@@ -50,6 +50,6 @@ pub struct Server {
 
 impl Server {
     pub async fn run() {
-        
+
     }
 }

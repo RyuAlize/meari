@@ -6,12 +6,12 @@ use crate::util;
 
 pub struct RemoteDesktopService {
     screen_cap: ScreenCap,
-    
+
     signal_rx: Receiver<()>,
 }
 
 impl RemoteDesktopService {
-    pub fn new(signal_rx: Receiver<()>) -> Result<Self> {
+    pub fn new(signal_rx: Receiver<()>) -> io::Result<Self> {
         Ok(Self { 
             screen_cap: ScreenCap::new()?,
             signal_rx,
