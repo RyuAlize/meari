@@ -1,6 +1,7 @@
 mod connection;
 mod codec;
 mod config;
+mod error;
 mod mirror;
 mod screen;
 mod server;

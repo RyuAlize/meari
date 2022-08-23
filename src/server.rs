@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 use std::io;
-
 use futures::{Stream, Sink, Future};
 use flume::{Receiver, Sender};
 use tokio_stream::wrappers::TcpListenerStream;
@@ -9,7 +8,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::TcpStream;
 
 use crate::mirror::RemoteDesktopService;
-
+use crate::error::Error;
 #[async_trait::async_trait]
 pub trait Listenable {
     type Conn: AsyncRead + AsyncWrite + Send + Unpin + 'static;
@@ -30,7 +29,7 @@ impl Listenable for SocketAddr {
 }
 
 
-pub async fn run(listener: SocketAddr, shutdown: impl Future) -> io::Result<()> {
+pub async fn run(listener: SocketAddr, shutdown: impl Future) -> Result<(), Error> {
     let (mut shutdown_complete_tx, mut shutdown_complete_rx) = flume::bounded::<()>(1);
     let server = Server {
         tcp_listener: listener.bind().await?,
