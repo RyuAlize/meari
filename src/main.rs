@@ -1,18 +1,13 @@
+mod connection;
+mod codec;
+mod config;
+mod mirror;
 mod screen;
 mod server;
-mod connection;
-mod config;
+mod protocol;
 mod util;
 
-use flume::Receiver;
-use scrap::{Capturer, Display, Frame};
-use image::codecs::png;
-use image::{ImageEncoder, ColorType};
-use std::fs::OpenOptions;
-use std::thread;
 use std::io::Result;
-use tokio::task;
-
 use screen::ScreenCap;
 #[tokio::main]
 async fn main() -> Result<()>{

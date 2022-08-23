@@ -5,34 +5,22 @@ use std::io::ErrorKind::WouldBlock;
 use std::future::Future;
 
 use scrap::{Capturer, Display, Frame};
-use image::codecs::png;
-use image::{ImageEncoder, ColorType};
 use flume::{Sender, Receiver};
 use tokio::task;
 use tokio::sync::{broadcast, mpsc, Semaphore};
 use crate::config::FPS;
 pub struct ScreenCap {
     capturer: Capturer,
-    signal_rx: Receiver<Semaphore>,
-    pixel_frame_tx: Sender<Vec<u8>>
 }
 
-impl Future for ScreenCap {
-    type Output = ();
-    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        todo!()
-    }
-}
 impl ScreenCap {
-    pub fn new(signal_rx: Receiver<Semaphore>) -> Result<(Self, Receiver<Vec<u8>>)> {
+    pub fn new() -> Result<Self> {
         let display = Display::primary()?;
         let mut capturer = Capturer::new(display)?;
-        let (tx, rx) = flume::unbounded();
-        Ok((Self { capturer, signal_rx, pixel_frame_tx: tx }, rx))
+        Ok(Self { capturer})
     }
 
-
-    pub async fn capture(&mut self) -> Result<Vec<u8>> {
+    pub fn capture(&mut self) -> Result<Vec<u8>> {
         let (width, height) = (self.capturer.width(), self.capturer.height());
         let one_second = std::time::Duration::new(1, 0);
         let one_frame = one_second / FPS;

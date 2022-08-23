@@ -1,33 +1,55 @@
+use std::net::SocketAddr;
+use std::io;
+
 use futures::{Stream, Sink, Future};
 use flume::{Receiver, Sender};
-use tokio;
+use tokio_stream::wrappers::TcpListenerStream;
 use tokio_util::codec::{Decoder, Framed};
 use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::net::TcpStream;
 
+use crate::mirror::RemoteDesktopService;
 
-pub trait IntoStaticFuture {
-    type Future: Future<Item = Self::Item, Error = Self::Error> + 'static + Send;
-    type Item;
-    type Error;
+#[async_trait::async_trait]
+pub trait Listenable {
+    type Conn: AsyncRead + AsyncWrite + Send + Unpin + 'static;
+    type Stream: Stream<Item = io::Result<Self::Conn>> + Unpin;
 
-    fn into_static_future(self) -> Self::Future;
+    async fn bind(&self) -> io::Result<Self::Stream>;
 }
 
-impl<F: IntoFuture> IntoStaticFuture for F
-where
-    <F as IntoFuture>::Future: 'static + Send,
-{
-    type Future = <F as IntoFuture>::Future;
-    type Item = <F as IntoFuture>::Item;
-    type Error = <F as IntoFuture>::Error;
+#[async_trait::async_trait]
+impl Listenable for SocketAddr {
+    type Conn = TcpStream;
+    type Stream = TcpListenerStream;
 
-    fn into_static_future(self) -> Self::Future {
-        self.into_future()
+    async fn bind(&self) -> io::Result<Self::Stream> {
+        let listener = tokio::net::TcpListener::bind(self).await?;
+        Ok(TcpListenerStream::new(listener))
     }
 }
 
 
+pub async fn run(listener: impl Listenable, shutdown: impl Future) -> io::Result<()> {
+    let (mut shutdown_complete_tx, mut shutdown_complete_rx) = flume::bounded::<()>(1);
+    let server = Server {
+        tcp_listener: listener.bind()?,
+        remote_desk_service: RemoteDesktopService::new(shutdown_complete_rx),
+        shutdown_complete_tx,
+    };
+
+    Ok(())
+} 
+
 
 pub struct Server {
-    
+    tcp_listener: TcpListenerStream,
+    remote_desk_service: RemoteDesktopService,
+    shutdown_complete_tx: Sender<()>,
+}
+
+impl Server {
+    pub async fn run() {
+        
+    }
 }

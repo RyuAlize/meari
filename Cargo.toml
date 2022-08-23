@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.57"
 bytes = "1.2.1"
 flate2 = { version = "1.0.24", features = ["zlib-ng"], default-features = false }
 flume = "0.10.14"
@@ -15,6 +16,8 @@ scrap = "0.5.0"
 thiserror = "1.0.32"
 tokio = {version = "1.20.1", features=["full"]}
 tokio-util = { version = "0.7.3", features = ["codec"] }
+tokio-tower = "0.5"
+tokio-stream = { version = "0.1", features = ["net"] }
 tower = { version = "0.4", features = ["make", "balance", "discover", "util", "limit", "buffer"] }
 
 [features]
